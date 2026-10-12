@@ -4,7 +4,7 @@ from tkinter import ttk, messagebox
 from pathlib import Path
 from time import perf_counter
 from servico import Acervo
-from algoritmos import ordenar
+from algoritmos import ordenar, ALGORITMOS
 
 class App:
     def __init__(self, root, service):
@@ -46,20 +46,44 @@ class App:
 
     def build_books(self):
         ttk.Label(self.books,text='Cadastre livros e explore os critérios de ordenação do acervo.').pack(anchor='w')
+        self.book_edit_id=None
         self.bvars=self.fields(self.books,['Título','Autor','Gênero','Ano','Exemplares'])
-        ttk.Button(self.books,text='Cadastrar livro',command=lambda:self.act(self.save_book)).pack(anchor='w')
+        bbuttons=ttk.Frame(self.books); bbuttons.pack(fill='x')
+        ttk.Button(bbuttons,text='Salvar livro',command=lambda:self.act(self.save_book)).pack(side='left')
+        ttk.Button(bbuttons,text='Editar selecionado',command=lambda:self.act(self.edit_book)).pack(side='left',padx=8)
+        ttk.Button(bbuttons,text='Novo / limpar',command=self.clear_book).pack(side='left')
         controls=ttk.Frame(self.books); controls.pack(fill='x',pady=12)
         self.algorithm=tk.StringVar(value='Heap Sort'); self.field=tk.StringVar(value='nota_media'); self.direction=tk.StringVar(value='Decrescente')
-        for var, values in [(self.algorithm,['Heap Sort','Merge Sort']),(self.field,['titulo','autor','genero','ano','id','disponiveis','popularidade','nota_media']),(self.direction,['Crescente','Decrescente'])]:
-            ttk.Combobox(controls,textvariable=var,values=values,state='readonly',width=19).pack(side='left',padx=(0,8))
+        self.fields_all=['titulo','autor','genero','ano','id','disponiveis','popularidade','nota_media']
+        self.algorithm_box=ttk.Combobox(controls,textvariable=self.algorithm,values=list(ALGORITMOS),state='readonly',width=19)
+        self.field_box=ttk.Combobox(controls,textvariable=self.field,values=self.fields_all,state='readonly',width=19)
+        self.direction_box=ttk.Combobox(controls,textvariable=self.direction,values=['Crescente','Decrescente'],state='readonly',width=19)
+        for box in (self.algorithm_box,self.field_box,self.direction_box): box.pack(side='left',padx=(0,8))
+        self.algorithm_box.bind('<<ComboboxSelected>>',self.algorithm_changed)
         ttk.Button(controls,text='Ordenar',command=self.refresh_books).pack(side='left')
-        self.booktree=self.tree(self.books,['ID','Título','Autor','Ano','Disponíveis','Empréstimos','Nota média'])
+        self.booktree=self.tree(self.books,['ID','Título','Autor','Gênero','Ano','Disponíveis','Empréstimos','Nota média'])
         self.metrics=tk.StringVar(); ttk.Label(self.books,textvariable=self.metrics).pack(anchor='w')
-        ttk.Label(self.books,text='Sem avaliação aparece ao final em ambos os sentidos. Merge Sort preserva a ordem dos empates.').pack(anchor='w',pady=8)
+        ttk.Label(self.books,text='Sem avaliação aparece ao final em ambos os sentidos. Merge Sort e Radix Sort MSD (apenas ano) preservam a ordem dos empates.').pack(anchor='w',pady=8)
+
+    def algorithm_changed(self,_event=None):
+        if self.algorithm.get()=='Radix Sort MSD':
+            self.field.set('ano'); self.field_box['values']=['ano']
+        else:
+            self.field_box['values']=self.fields_all
+        self.refresh_books()
+
+    def clear_book(self):
+        self.book_edit_id=None
+        for var in self.bvars.values(): var.set('')
 
     def save_book(self):
-        self.service.livro(*(self.bvars[n].get() for n in ['Título','Autor','Gênero','Ano','Exemplares']))
-        for var in self.bvars.values(): var.set('')
+        self.service.livro(*(self.bvars[n].get() for n in ['Título','Autor','Gênero','Ano','Exemplares']),id=self.book_edit_id)
+        self.clear_book()
+
+    def edit_book(self):
+        self.book_edit_id=self.selected(self.booktree)
+        row=self.service._get(self.service.dados['livros'],self.book_edit_id)
+        for label,key in [('Título','titulo'),('Autor','autor'),('Gênero','genero'),('Ano','ano'),('Exemplares','total')]: self.bvars[label].set(row[key])
 
     def build_readers(self):
         self.edit_id=None
@@ -118,7 +142,7 @@ class App:
         start=perf_counter()
         books=ordenar(self.service.livros(),self.field.get(),self.direction.get()=='Crescente',self.algorithm.get())
         elapsed=(perf_counter()-start)*1000
-        self.fill(self.booktree,[(b['id'],(b['id'],b['titulo'],b['autor'],b['ano'],b['disponiveis'],b['popularidade'],'Sem nota' if b['nota_media'] is None else f"{b['nota_media']:.2f}")) for b in books])
+        self.fill(self.booktree,[(b['id'],(b['id'],b['titulo'],b['autor'],b['genero'],b['ano'],b['disponiveis'],b['popularidade'],'Sem nota' if b['nota_media'] is None else f"{b['nota_media']:.2f}")) for b in books])
         self.metrics.set(f'{self.algorithm.get()} | {len(books)} livros | preparação e ordenação: {elapsed:.3f} ms')
 
     def refresh(self):

@@ -52,15 +52,24 @@ class Acervo:
         self._commit(data)
         return row['id']
 
-    def livro(self, titulo, autor, genero, ano, total):
+    def livro(self, titulo, autor, genero, ano, total, id=None):
+        """Cadastra um livro (id=None) ou edita o livro de `id`. O ID nunca muda."""
         titulo = self._texto(titulo, 'Título'); autor = self._texto(autor, 'Autor')
         genero = self._texto(genero, 'Gênero')
         try: ano, total = int(ano), int(total)
         except (ValueError, TypeError): raise ValueError('Ano e exemplares devem ser inteiros.')
         if not 1 <= ano <= 9999 or total < 1: raise ValueError('Ano deve estar entre 1 e 9999; exemplares devem ser positivos.')
         data = copy.deepcopy(self.dados)
-        row = dict(id=self._id(data['livros']), titulo=titulo, autor=autor, genero=genero, ano=ano, total=total)
-        data['livros'].append(row); self._commit(data)
+        if id is None:
+            row = dict(id=self._id(data['livros']), titulo=titulo, autor=autor, genero=genero, ano=ano, total=total)
+            data['livros'].append(row)
+        else:
+            row = self._get(data['livros'], id)
+            emprestados = sum(x['livro_id'] == id and x['devolvido_em'] is None for x in data['emprestimos'])
+            if total < emprestados:
+                raise ValueError(f'Há {emprestados} exemplar(es) emprestado(s); o total não pode ser menor que isso.')
+            row.update(titulo=titulo, autor=autor, genero=genero, ano=ano, total=total)
+        self._commit(data)
         return row['id']
 
     def livros(self):

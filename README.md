@@ -8,11 +8,11 @@ O trabalho pertence ao **Grupo 26**, da disciplina de **Estruturas de Dados 2**,
 
 ## Características dos Dados e da Arquitetura
 
-* **Acervo:** livros com ID, título, autor, gênero, ano de publicação e total de exemplares.
+* **Acervo:** livros com ID, título, autor, gênero, ano de publicação e total de exemplares, com cadastro e edição.
 * **Leitores:** cadastro com ID, nome, matrícula única e contato, com edição dos dados.
 * **Circulação:** empréstimos vinculados ao livro e ao leitor, com prazo de 14 dias e registro da devolução.
 * **Avaliações:** nota opcional de 0 a 5 na devolução; a média é calculada a partir do histórico.
-* **Ordenação:** Heap Sort e Merge Sort, com seleção de campo e sentido crescente ou decrescente.
+* **Ordenação:** Heap Sort, Merge Sort, Quick Sort e Radix Sort MSD (apenas ano), com seleção de campo e sentido crescente ou decrescente.
 * **Interface gráfica:** três abas desenvolvidas em Python com Tkinter.
 * **Persistência:** armazenamento local em JSON, com substituição atômica do arquivo para cada operação.
 * **Medição:** exibição do tempo de preparação e ordenação da listagem atual em milissegundos. Essa medição não constitui um benchmark controlado.
@@ -27,8 +27,8 @@ Os dados ficam em `dados/acervo.json`, criado automaticamente durante o uso. Ess
 
 O trabalho foi organizado em duas frentes:
 
-* **Acervo e apresentação dos dados:** cadastro de livros, listagem, seleção dos critérios de ordenação e integração da tabela.
-* **Leitores, circulação e algoritmos:** cadastro e edição de leitores, empréstimos, devoluções, avaliações, Heap Sort, Merge Sort e testes das regras.
+* **Acervo e ordenação (Pessoa 1):** cadastro e edição de livros, listagem, Quick Sort, Radix Sort MSD, seleção dos critérios de ordenação, integração da tabela e testes do acervo e desses algoritmos.
+* **Leitores e circulação (Pessoa 2):** cadastro e edição de leitores, empréstimos, devoluções, avaliações, Heap Sort, Merge Sort e testes das regras.
 
 ### Responsabilidade Compartilhada
 
@@ -50,9 +50,19 @@ O algoritmo divide a lista em duas partes, ordena cada parte recursivamente e in
 
 A implementação preserva a ordem dos elementos com a mesma chave, tanto na ordenação crescente quanto na decrescente.
 
+### Quick Sort
+
+Escolhe o pivô pela mediana de três e particiona em três vias (menores, iguais e maiores), o que mantém bom desempenho com chaves repetidas e com listas já ordenadas ou invertidas. É iterativo, com pilha de no máximo `O(log n)` entradas. Complexidade média `O(n log n)` e pior caso teórico `O(n²)`. Não é estável.
+
+### Radix Sort MSD
+
+Ordena o ano de publicação (inteiros de 0 a 9999) distribuindo os livros em baldes pelo dígito mais significativo e refinando cada balde pelos dígitos seguintes. Custa `O(d · n)` com `d = 4`, é estável nos dois sentidos e rejeita valores fora do domínio. Na interface, ao escolhê-lo o campo fica fixo em `ano`.
+
+A estrutura de dados do acervo e as regras de ordenação por texto e ano estão detalhadas em [`docs/acervo_e_ordenacao.md`](docs/acervo_e_ordenacao.md).
+
 ### Critérios Disponíveis
 
-Os dois algoritmos podem ordenar por título, autor, gênero, ano, ID, exemplares disponíveis, quantidade de empréstimos ou nota média. A comparação de texto ignora diferenças entre maiúsculas e minúsculas e mantém os acentos. Livros sem avaliação aparecem no final nos dois sentidos.
+Heap Sort, Merge Sort e Quick Sort podem ordenar por título, autor, gênero, ano, ID, exemplares disponíveis, quantidade de empréstimos ou nota média. A comparação de texto ignora diferenças entre maiúsculas e minúsculas e mantém os acentos. Livros sem avaliação aparecem no final nos dois sentidos.
 
 ## 💻 Como Baixar e Executar
 
@@ -101,12 +111,12 @@ python app.py --dados dados/vazio.json --sem-demo
 
 Execute `python -m unittest -v` na pasta do projeto ou abra `testes.bat` no Windows.
 
-Os 13 testes verificam ordenação, estabilidade do Merge Sort, listas vazias e repetidas, notas ausentes, cadastro e edição de leitores, validações, empréstimos, devoluções, médias, persistência e falha de gravação. Um teste adicional à lógica de serviço, incluído nesse total, exercita os formulários em uma janela oculta; por isso, a suíte completa precisa de um ambiente gráfico disponível.
+Os testes de Quick Sort, Radix Sort MSD e do acervo ficam em `test_quick_radix.py` e `test_acervo.py` e não precisam de ambiente gráfico. Os 13 testes da outra frente verificam ordenação, estabilidade do Merge Sort, listas vazias e repetidas, notas ausentes, cadastro e edição de leitores, validações, empréstimos, devoluções, médias, persistência e falha de gravação. Um teste adicional à lógica de serviço, incluído nesse total, exercita os formulários em uma janela oculta; por isso, a suíte completa precisa de um ambiente gráfico disponível.
 
 Para executar somente os testes que não abrem componentes gráficos:
 
 ```bash
-python -m unittest -v test_algoritmos test_servico
+python -m unittest -v test_algoritmos test_servico test_quick_radix test_acervo
 ```
 
 ## 🎥 Demonstração Visual
@@ -128,8 +138,11 @@ Empreste o único exemplar de **O Cortiço** para um leitor e tente emprestá-lo
 ```text
 app.py                 Interface gráfica
 servico.py             Regras de negócio e persistência
-algoritmos.py          Heap Sort, Merge Sort e seleção da ordenação
+algoritmos.py          Heap Sort, Merge Sort, Quick Sort, Radix Sort MSD e seleção da ordenação
 test_algoritmos.py     Testes dos algoritmos
+test_quick_radix.py    Testes do Quick Sort e do Radix Sort MSD
+test_acervo.py         Testes de cadastro, edição e persistência de livros
+docs/                  Estrutura de dados e ordenação por texto e ano
 test_servico.py        Testes das regras de negócio
 test_interface.py      Teste dos formulários
 iniciar.bat            Inicializador para Windows
@@ -139,7 +152,7 @@ VALIDACAO.md           Resultado e limites da validação
 
 ## Limites da Versão
 
-O sistema foi desenvolvido para uso local por uma instância de cada vez. Não inclui autenticação, exclusão de registros, edição de livros, Quick Sort, Radix Sort ou comparação estatística de desempenho. As datas de circulação seguem a data local do computador.
+O sistema foi desenvolvido para uso local por uma instância de cada vez. Não inclui autenticação, exclusão de registros ou comparação estatística de desempenho. As datas de circulação seguem a data local do computador.
 
 ## Equipe de Desenvolvimento
 
