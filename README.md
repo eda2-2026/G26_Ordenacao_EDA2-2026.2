@@ -129,6 +129,28 @@ Ao executar `app.py`, o sistema abre o painel do acervo. A partir dele, é poss�
 4. Selecionar um empréstimo e registrar a devolução, com avaliação opcional.
 5. Voltar ao acervo para conferir disponibilidade, popularidade e nota média.
 
+### Apresentação em Vídeo
+
+[Assista à apresentação do Acervo Bibliográfico no YouTube](https://www.youtube.com/watch?v=47OzSPtXssw).
+
+### Capturas de Tela
+
+**Acervo e ordenação:** cadastro e edição de livros, seleção do algoritmo e critérios de ordenação.
+
+![Interface de cadastro e ordenação do acervo](docs/imagens/acervo.png)
+
+**Leitores:** cadastro e edição dos dados dos leitores.
+
+![Interface de cadastro de leitores](docs/imagens/leitores.png)
+
+**Empréstimos e devoluções:** controle da circulação dos livros e registro de avaliações.
+
+![Interface de empréstimos e devoluções](docs/imagens/emprestimos-devolucoes.png)
+
+**Heap Sort por nota média:** livros ordenados pelas avaliações, em ordem decrescente.
+
+![Resultado do Heap Sort por nota média em ordem decrescente](docs/imagens/heap-sort-notas.png)
+
 ### Roteiro de Validação Manual
 
 Empreste o único exemplar de **O Cortiço** para um leitor e tente emprestá-lo a outro. A segunda operação deve ser bloqueada. Devolva o livro com nota e confira a atualização da disponibilidade e da média. Uma nova devolução do mesmo empréstimo também deve ser bloqueada.
